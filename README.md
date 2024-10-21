@@ -1,2 +1,2 @@
-# teleport-challenge
-My solution to the teleport programming challenge
+# Teleport Challenge
+This repository contains my implementation of the Teleport programming challenge exercise.
