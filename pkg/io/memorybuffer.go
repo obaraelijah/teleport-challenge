@@ -5,15 +5,20 @@ import (
 	"sync"
 )
 
-type MemoryBuffer struct {
-	content []byte
-	closed  bool
-	mutex   sync.RWMutex
-}
-
 // The default initial capacity of a memory buffer created using NewMemoryBuffer.
 const DefaultInitialMemoryBufferCapacity = 4096
 
+// MemoryBuffer is an in-memory buffer of bytes.  This keeps the data even after
+// it has been read to enable multiple clients to read what is written to this
+// buffer.
+type MemoryBuffer struct {
+	mutex   sync.RWMutex
+	content []byte
+	closed  bool
+}
+
+// NewMemoryBuffer creates and returns a MemoryBuffer with an initial capacity
+// of DefaultMemoryBufferCapacity.
 func NewMemoryBuffer() *MemoryBuffer {
 	return NewMemoryBufferDetailed(DefaultInitialMemoryBufferCapacity)
 }
@@ -26,6 +31,8 @@ func NewMemoryBufferDetailed(initialCapacity int) *MemoryBuffer {
 	}
 }
 
+// Write appends newContent to this MemoryBuffer.  The returned bytesWritten is
+// always len(newContent).  Compatible with io.Writer.
 func (b *MemoryBuffer) Write(newContent []byte) (bytesWritten int, err error) {
 	b.mutex.Lock()
 	defer b.mutex.Unlock()
@@ -39,6 +46,10 @@ func (b *MemoryBuffer) Write(newContent []byte) (bytesWritten int, err error) {
 	return len(newContent), nil
 }
 
+// ReadAt reads len(p) bytes into outputBuffer starting at the given offset in
+// the underlying buffer.  It returns the number of bytes read
+// (0 <= bytesRead <= len(outputBuffer)).  The returned error is always nil.
+// Compatible with io.ReadAt.
 func (b *MemoryBuffer) ReadAt(outputBuffer []byte, offset int64) (bytesRead int, err error) {
 	if len(outputBuffer) == 0 {
 		return 0, nil
@@ -48,4 +59,32 @@ func (b *MemoryBuffer) ReadAt(outputBuffer []byte, offset int64) (bytesRead int,
 	defer b.mutex.RUnlock()
 
 	return copy(outputBuffer, b.content[offset:]), nil
+}
+
+// Close closes this MemoryBuffer.  Once the MemoryBuffer is closed, it will
+// accept no additional writes.  The returned error is always nil.
+func (b *MemoryBuffer) Close() error {
+
+	b.mutex.Lock()
+	defer b.mutex.Unlock()
+
+	b.closed = true
+
+	return nil
+}
+
+// Size returns the current size of this MemoryBuffer.
+func (b *MemoryBuffer) Size() int64 {
+	b.mutex.RLock()
+	defer b.mutex.RUnlock()
+
+	return int64(len(b.content))
+}
+
+// Closed returns true if this MemoryBuffer has been closed, false otherwise.
+func (b *MemoryBuffer) Closed() bool {
+	b.mutex.Lock()
+	defer b.mutex.Unlock()
+
+	return b.closed
 }
