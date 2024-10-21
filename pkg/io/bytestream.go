@@ -1,5 +1,7 @@
 package io
 
+import "sync"
+
 // DefaultMaxBufferSize is the default maximum number of bytes that a ByteStream
 // will read from the underlying buffer at once.
 const DefaultMaxBufferSize = 1024
@@ -9,6 +11,10 @@ type ByteStream struct {
 	buffer      OutputBuffer
 	channel     chan []byte
 	maxReadSize int
+
+	// mutex guards the fields that follow
+	mutex            sync.Mutex
+	goroutineStarted bool
 }
 
 // NewByteStream creates and returns a new ByteStream associated with the
@@ -25,4 +31,25 @@ func NewByteStreamDetailed(buffer OutputBuffer, maxReadSize int) *ByteStream {
 		buffer:      buffer,
 		maxReadSize: maxReadSize,
 	}
+}
+
+// Stream returns a chanel that streams the content of the underlying OutputBuffer.
+func (b *ByteStream) Stream() <-chan []byte {
+	bailEarly := true
+
+	func() {
+		b.mutex.Lock()
+		defer b.mutex.Unlock()
+
+		if !b.goroutineStarted {
+			bailEarly = false
+			b.goroutineStarted = true
+		}
+	}()
+
+	if bailEarly {
+		return b.channel
+	}
+
+	return b.channel
 }
