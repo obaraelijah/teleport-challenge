@@ -10,4 +10,6 @@ type OutputBuffer interface {
 	goio.Writer
 	goio.ReaderAt
 	goio.Closer
+
+	waitForChange(nextByte int64) (bufferSize int64, closed bool)
 }

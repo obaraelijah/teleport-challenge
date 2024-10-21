@@ -51,5 +51,10 @@ func (b *ByteStream) Stream() <-chan []byte {
 		return b.channel
 	}
 
+	go func ()  {
+		var nextByte int64
+		readBuffer := make([]byte, b.maxReadSize)
+	}
+
 	return b.channel
 }
