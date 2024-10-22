@@ -17,8 +17,9 @@ func Test_memory_Apply(t *testing.T) {
 		WriteFileFn: writeRecorder.WriteFile,
 	}
 	limit := "500M"
-	mem := cgroup.NewMemoryDetailed(adapter).SetLimit(limit)
+	mem := cgroup.NewMemoryControllerDetailed(adapter).SetLimit(limit)
 	mem.Apply(path)
+
 	assert.Equal(t, 1, len(writeRecorder.Events))
 	assert.Equal(t, fmt.Sprintf("%s/%s", path, cgroup.MemoryLimitInBytesFilename), writeRecorder.Events[0].Name)
 	assert.Equal(t, []byte(limit), writeRecorder.Events[0].Data)

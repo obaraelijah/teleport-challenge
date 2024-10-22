@@ -9,6 +9,8 @@ const (
 
 type blockIo struct {
 	base
+	// TODO: It might be helpful to enable these to be lists so that a single
+	// blockIo object can handle multiple devices.
 	readBpsDevice  *string
 	writeBpsDevice *string
 }
