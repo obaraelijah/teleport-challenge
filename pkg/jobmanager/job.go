@@ -3,40 +3,72 @@ package jobmanager
 import (
 	"os/exec"
 	"sync"
+	"syscall"
 
 	"github.com/google/uuid"
 	"github.com/obaraelijah/teleport-challenge/pkg/cgroup/v1"
 	"github.com/obaraelijah/teleport-challenge/pkg/io"
 )
 
-type job struct {
-	mutex        sync.Mutex
-	id           uuid.UUID
-	name         string
-	cgroupSet    *cgroup.Set
-	cmd          exec.Cmd
-	stdoutBuffer io.OutputBuffer
-	stderrBuffer io.OutputBuffer
+type JobStatus struct {
+	Running   bool
+	Pid       int
+	ExitCode  int
+	SignalNum syscall.Signal
+	RunError  error
 }
 
-func NewJob(name string, cgroupSet *cgroup.Set, command string, args ...string) *job {
-	return NewJobDetailed(name, cgroupSet, io.NewMemoryBuffer(), io.NewMemoryBuffer(), command, args...)
+type job struct {
+	mutex         sync.Mutex
+	id            uuid.UUID
+	name          string
+	cgControllers []cgroup.Controller
+	programName   string
+	programArgs   []string
+	cmd           *exec.Cmd
+	stdoutBuffer  io.OutputBuffer
+	stderrBuffer  io.OutputBuffer
+	running       bool
+	runErrors     []error
+}
+
+func NewJob(
+	name string,
+	cgControllers []cgroup.Controller,
+	programName string,
+	programArgs ...string,
+) *job {
+	return NewJobDetailed(
+		name,
+		cgControllers,
+		io.NewMemoryBuffer(),
+		io.NewMemoryBuffer(),
+		programName,
+		programArgs...,
+	)
 }
 
 func NewJobDetailed(
 	name string,
-	cgroupSet *cgroup.Set,
+	cgControllers []cgroup.Controller,
 	stdoutBuffer io.OutputBuffer,
 	stderrBuffer io.OutputBuffer,
-	command string,
-	args ...string,
+	programName string,
+	programArgs ...string,
 ) *job {
 	return &job{
-		id:           uuid.New(),
-		name:         name,
-		cgroupSet:    cgroupSet,
-		cmd:          *exec.Command(""),
-		stdoutBuffer: stdoutBuffer,
-		stderrBuffer: stderrBuffer,
+		id:            uuid.New(),
+		name:          name,
+		cgControllers: cgControllers,
+		programName:   programName,
+		programArgs:   programArgs,
+		stdoutBuffer:  stdoutBuffer,
+		stderrBuffer:  stderrBuffer,
 	}
+}
+
+func (j *job) Start() error {
+	j.mutex.Lock()
+	defer j.mutex.Unlock()
+	return nil
 }
