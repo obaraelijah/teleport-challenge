@@ -1,9 +1,12 @@
 package io
 
-import "sync"
+import (
+	"log"
+	"sync"
+)
 
 // DefaultMaxBufferSize is the default maximum number of bytes that a ByteStream
-// will read from the underlying buffer at once.
+// will read from the underlying buffer at at once.
 const DefaultMaxBufferSize = 1024
 
 // ByteStream enables clients to stream bytes from an OutputBuffer.
@@ -35,6 +38,7 @@ func NewByteStreamDetailed(buffer OutputBuffer, maxReadSize int) *ByteStream {
 
 // Stream returns a chanel that streams the content of the underlying OutputBuffer.
 func (b *ByteStream) Stream() <-chan []byte {
+
 	bailEarly := true
 
 	func() {
@@ -47,14 +51,52 @@ func (b *ByteStream) Stream() <-chan []byte {
 		}
 	}()
 
+	// If some other call to Stream has already created the goroutine, then
+	// there's nothing for this call to do other than to return the channel.
 	if bailEarly {
 		return b.channel
 	}
 
-	go func ()  {
+	go func() {
 		var nextByte int64
 		readBuffer := make([]byte, b.maxReadSize)
-	}
+
+		for {
+			bufferSize, _ := b.buffer.waitForChange(nextByte)
+
+			// At this point the underlying buffer could be closed, there could
+			// be new bytes in the buffer to process, or both.
+
+			if bufferSize == nextByte {
+				// No new bytes to process; the buffer must be closed and this
+				// streamer must have consumed all the bytes that were written
+				// to the buffer. Terminate the goroutine.
+				close(b.channel)
+				return
+			}
+
+			if n, err := b.buffer.ReadAt(readBuffer, nextByte); err != nil {
+				// If ReadAt fails, we'l assume the buffer is in a bad state
+				// and that future reads would also fail.
+
+				log.Printf("Unexpected failure reading from underlying buffer: %v", err)
+
+				close(b.channel)
+				return
+			} else if n > 0 {
+				// Create a copy here because we're reusing readBuffer here.
+				bufToWrite := make([]byte, n)
+				copy(bufToWrite, readBuffer[0:n])
+
+				b.channel <- bufToWrite
+				nextByte += int64(n)
+			}
+
+			// If n == 0, then it's possible that new bytes were written to the
+			// buffer since we inspected its size above.  In that case, we'll
+			// get the updated size and reevaluate on the next iteration.
+		}
+	}()
 
 	return b.channel
 }
