@@ -21,6 +21,10 @@ clean:
 	$(RM) -r build
 .PHONY: clean
 
-test:
-	$(GOTEST) -v -race ./...
+test: vet
+	@$(GOTEST) -v -race ./...
 .PHONY: test
+
+vet:
+	@go vet ./...
+.PHONY: vet
