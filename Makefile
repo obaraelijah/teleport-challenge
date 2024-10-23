@@ -13,7 +13,7 @@ cgexec: CGO_ENABLED=0
 cgexec: GOOS=linux
 cgexec: GOARCH=amd64
 cgexec: BUILDFLAGS=-buildmode pie -tags 'osusergo netgo static_build'
-cgexec: builddir cmd/cgexec/cgexec.go
+cgexec: dep builddir cmd/cgexec/cgexec.go
 	go build -o build/cgexec cmd/cgexec/cgexec.go
 .PHONY: cgexec
 
@@ -25,6 +25,10 @@ test: vet
 	@$(GOTEST) -v -race ./...
 .PHONY: test
 
-vet:
+vet: dep
 	@go vet ./...
 .PHONY: vet
+
+dep:
+	@go mod download
+.PHONY: dep
