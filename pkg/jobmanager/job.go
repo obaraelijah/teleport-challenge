@@ -9,10 +9,13 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/obaraelijah/teleport-challenge/pkg/cgroup/v1"
+	"github.com/obaraelijah/teleport-challenge/pkg/config"
 	"github.com/obaraelijah/teleport-challenge/pkg/io"
 )
 
+// JobStatus models the current status of a job.
 type JobStatus struct {
+	Owner     string
 	Name      string
 	Id        string
 	Running   bool
@@ -22,17 +25,24 @@ type JobStatus struct {
 	RunError  error
 }
 
+// Job defines an interface for objects that behave like jobs.  This enables
+// us to define both a production job type as well a a job type for unit
+// testing.
 type Job interface {
 	Start() error
 	Stop() error
+	Status() *JobStatus
 	StdoutStream() *io.ByteStream
 	StderrStream() *io.ByteStream
-	Status() *JobStatus
+	Name() string
 	Id() uuid.UUID
 }
 
-type job struct {
+// concreteJob implements the Job interface and provides the production implementation
+// of concreteJob behavior.
+type concreteJob struct {
 	mutex         sync.Mutex
+	owner         string
 	id            uuid.UUID
 	name          string
 	cgControllers []cgroup.Controller
@@ -46,6 +56,7 @@ type job struct {
 }
 
 func NewJob(
+	owner string,
 	name string,
 	cgControllers []cgroup.Controller,
 	programName string,
@@ -53,6 +64,7 @@ func NewJob(
 ) Job {
 
 	return NewJobDetailed(
+		owner,
 		name,
 		cgControllers,
 		io.NewMemoryBuffer(),
@@ -63,6 +75,7 @@ func NewJob(
 }
 
 func NewJobDetailed(
+	owner string,
 	name string,
 	cgControllers []cgroup.Controller,
 	stdoutBuffer io.OutputBuffer,
@@ -71,7 +84,8 @@ func NewJobDetailed(
 	programArgs ...string,
 ) Job {
 
-	return &job{
+	return &concreteJob{
+		owner:         owner,
 		id:            uuid.New(),
 		name:          name,
 		cgControllers: cgControllers,
@@ -82,7 +96,7 @@ func NewJobDetailed(
 	}
 }
 
-func (j *job) Start() error {
+func (j *concreteJob) Start() error {
 	j.mutex.Lock()
 	defer j.mutex.Unlock()
 
@@ -100,8 +114,7 @@ func (j *job) Start() error {
 	args = append(args, j.programName)
 	args = append(args, j.programArgs...)
 
-	//j.cmd = exec.Command("build/cgexec", args...)
-	j.cmd = exec.Command("/tmp/cgexec", args...)
+	j.cmd = exec.Command(config.CgexecPath, args...)
 	j.cmd.Stdout = j.stdoutBuffer
 	j.cmd.Stderr = j.stderrBuffer
 	j.cmd.Env = make([]string, 0) // Do not pass along our environment
@@ -146,7 +159,7 @@ func (j *job) Start() error {
 	return nil
 }
 
-func (j *job) Stop() error {
+func (j *concreteJob) Stop() error {
 	j.mutex.Lock()
 	defer j.mutex.Unlock()
 
@@ -162,21 +175,22 @@ func (j *job) Stop() error {
 	return nil
 }
 
-func (j *job) StdoutStream() *io.ByteStream {
+func (j *concreteJob) StdoutStream() *io.ByteStream {
 	// Unlocked read of j.stdoutBuffer should be ok since it's not modified once created
 	return io.NewByteStream(j.stdoutBuffer)
 }
 
-func (j *job) StderrStream() *io.ByteStream {
+func (j *concreteJob) StderrStream() *io.ByteStream {
 	// Unlocked read of j.stderrBuffer should be ok since it's not modified once created
 	return io.NewByteStream(j.stderrBuffer)
 }
 
-func (j *job) Status() *JobStatus {
+func (j *concreteJob) Status() *JobStatus {
 	j.mutex.Lock()
 	defer j.mutex.Unlock()
 
 	status := &JobStatus{
+		Owner:     j.owner,
 		Name:      j.name,
 		Id:        j.id.String(),
 		Running:   j.running,
@@ -201,13 +215,17 @@ func (j *job) Status() *JobStatus {
 	return status
 }
 
-func (j *job) Id() uuid.UUID {
+func (j *concreteJob) Id() uuid.UUID {
 	return j.id
 }
 
-// lockedOperation is a simple runs the functor with the job lock held.
+func (j *concreteJob) Name() string {
+	return j.name
+}
+
+// lockedOperation is a simple runs the functor with the concreteJob lock held.
 // The caller must not hold the lock.
-func (j *job) lockedOperation(fn func()) {
+func (j *concreteJob) lockedOperation(fn func()) {
 	j.mutex.Lock()
 	defer j.mutex.Unlock()
 
