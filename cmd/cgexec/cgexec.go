@@ -21,7 +21,7 @@ import (
 // If no "--" is found, then all arguments are treated as the command and
 // arguments to the program to exec.
 func main() {
-	if err := command.CgexecDetailed(os.Args, nil, nil); err != nil {
+	if err := command.Cgexec(os.Args); err != nil {
 		fmt.Printf("cgexec failed: %v", err)
 	}
 	// Cgexec shouldn't return in a non-error case
