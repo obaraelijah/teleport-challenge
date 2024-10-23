@@ -12,6 +12,7 @@ type memory struct {
 	limit *string
 }
 
+// NewMemoryController creates an returns a new memory cgroup controller.
 func NewMemoryController() *memory {
 	return NewMemoryControllerDetailed(nil)
 }
@@ -22,6 +23,8 @@ func NewMemoryControllerDetailed(osAdapter *os.Adapter) *memory {
 	}
 }
 
+// SetLimit sets the memory limit in bytes that this cgroup controller will
+// enforce.
 func (m *memory) SetLimit(value string) *memory {
 	m.limit = &value
 
