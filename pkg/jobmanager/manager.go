@@ -5,6 +5,11 @@ import (
 	"sync"
 
 	"github.com/obaraelijah/teleport-challenge/pkg/cgroup/v1"
+	"github.com/obaraelijah/teleport-challenge/pkg/io"
+)
+
+const (
+	Superuser = "administrator"
 )
 
 type JobConstructor func(
@@ -45,4 +50,102 @@ func NewManagerDetailed(jobConstructor JobConstructor, controllers []cgroup.Cont
 		controllers:    controllers,
 		jobConstructor: jobConstructor,
 	}
+}
+
+func (m *Manager) Start(userId, jobName, programPath string, arguments []string) (Job, error) {
+	m.mutex.Lock()
+	defer m.mutex.Unlock()
+
+	if _, exists := m.jobsByUser[userId]; !exists {
+		m.jobsByUser[userId] = make(map[string]Job)
+	}
+
+	job := m.jobConstructor(jobName, m.controllers, programPath, arguments...)
+
+	m.jobsByUser[userId][job.Id().String()] = job
+	m.allJobs[job.Id().String()] = job
+
+	return job, job.Start()
+}
+
+func (m *Manager) Stop(userId, jobId string) error {
+	m.mutex.RLock()
+	defer m.mutex.RUnlock()
+
+	if job, err := m.findJobByUser(userId, jobId); err != nil {
+		return err
+	} else {
+		return job.Stop()
+	}
+}
+
+func (m *Manager) List(userId string) []*JobStatus {
+	m.mutex.RLock()
+	defer m.mutex.RUnlock()
+
+	var jobStatusList []*JobStatus
+
+	if userId == Superuser {
+		for _, job := range m.allJobs {
+			jobStatusList = append(jobStatusList, job.Status())
+		}
+	} else {
+		if l2map, exists := m.jobsByUser[userId]; exists {
+			jobStatusList = make([]*JobStatus, 0, len(l2map))
+			for _, job := range l2map {
+				jobStatusList = append(jobStatusList, job.Status())
+			}
+		}
+	}
+
+	return jobStatusList
+}
+
+func (m *Manager) Status(userId, jobId string) (*JobStatus, error) {
+	m.mutex.RLock()
+	defer m.mutex.RUnlock()
+
+	if job, err := m.findJobByUser(userId, jobId); err != nil {
+		return nil, err
+	} else {
+		return job.Status(), nil
+	}
+}
+
+func (m *Manager) StdoutStream(userId, jobId string) (*io.ByteStream, error) {
+	m.mutex.RLock()
+	defer m.mutex.RUnlock()
+
+	if job, err := m.findJobByUser(userId, jobId); err != nil {
+		return nil, err
+	} else {
+		return job.StdoutStream(), nil
+	}
+}
+
+func (m *Manager) StderrStream(userId, jobId string) (*io.ByteStream, error) {
+	m.mutex.RLock()
+	defer m.mutex.RUnlock()
+
+	if job, err := m.findJobByUser(userId, jobId); err != nil {
+		return nil, err
+	} else {
+		return job.StderrStream(), nil
+	}
+}
+
+func (m *Manager) findJobByUser(userId, jobId string) (Job, error) {
+	if userId == Superuser {
+		if job, exists := m.allJobs[jobId]; exists {
+			return job, nil
+		}
+	} else {
+		if l2map, exists := m.jobsByUser[userId]; exists {
+			if job, exists := l2map[jobId]; exists {
+				return job, nil
+			}
+		}
+	}
+
+	return nil, fmt.Errorf("job '%s' does not exist", jobId)
 }
