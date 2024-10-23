@@ -14,8 +14,8 @@ import (
 
 func Test_Set_Create_Success(t *testing.T) {
 	jobId, _ := uuid.Parse("0b5183b8-b572-49c7-90c4-fffc775b7d7b")
-	mkdirAllRecorder := ostest.MkdirAllRecorder{}
-	removeRecorder := ostest.RemoveRecorder{}
+	mkdirAllRecorder := ostest.MkdirAllMock{}
+	removeRecorder := ostest.RemoveMock{}
 
 	adapter := &os.Adapter{
 		MkdirAllFn: mkdirAllRecorder.MkdirAll,
@@ -41,8 +41,8 @@ func Test_Set_Create_Success(t *testing.T) {
 
 func Test_Set_Create_Failure(t *testing.T) {
 	jobId, _ := uuid.Parse("0b5183b8-b572-49c7-90c4-fffc775b7d7b")
-	mkdirAllRecorder := ostest.MkdirAllRecorder{}
-	removeRecorder := ostest.RemoveRecorder{}
+	mkdirAllRecorder := ostest.MkdirAllMock{}
+	removeRecorder := ostest.RemoveMock{}
 
 	adapter := &os.Adapter{
 		MkdirAllFn: mkdirAllRecorder.MkdirAll,
@@ -71,7 +71,7 @@ func Test_Set_Create_Failure(t *testing.T) {
 
 func Test_Set_Destroy_Success(t *testing.T) {
 	jobId, _ := uuid.Parse("0b5183b8-b572-49c7-90c4-fffc775b7d7b")
-	removeRecorder := ostest.RemoveRecorder{}
+	removeRecorder := ostest.RemoveMock{}
 
 	adapter := &os.Adapter{
 		RemoveFn: removeRecorder.Remove,
@@ -96,7 +96,7 @@ func Test_Set_Destroy_Success(t *testing.T) {
 func Test_Set_Destroy_Failure(t *testing.T) {
 	jobId, _ := uuid.Parse("0b5183b8-b572-49c7-90c4-fffc775b7d7b")
 	injectedError := fmt.Errorf("injected error")
-	removeRecorder := ostest.RemoveRecorder{
+	removeRecorder := ostest.RemoveMock{
 		NextError: injectedError,
 	}
 

@@ -7,15 +7,16 @@ type MkdirAllRecord struct {
 	Perm os.FileMode
 }
 
-type MkdirAllRecorder struct {
+type MkdirAllMock struct {
 	Events    []*MkdirAllRecord
 	NextError error
 }
 
-func (w *MkdirAllRecorder) MkdirAll(path string, perm os.FileMode) error {
+func (w *MkdirAllMock) MkdirAll(path string, perm os.FileMode) error {
 	w.Events = append(w.Events, &MkdirAllRecord{
 		Path: path,
 		Perm: perm,
 	})
+
 	return w.NextError
 }
