@@ -54,8 +54,8 @@ func (b *MemoryBuffer) Write(newContent []byte) (bytesWritten int, err error) {
 
 // ReadAt reads len(p) bytes into outputBuffer starting at the given offset in
 // the underlying buffer.  It returns the number of bytes read
-// (0 <= bytesRead <= len(outputBuffer)).  The returned error is always nil.
-// Compatible with io.ReadAt.
+// (0 <= bytesRead <= len(outputBuffer)).  This will return an error if the
+// given offset is greater than the current buffer size.
 func (b *MemoryBuffer) ReadAt(outputBuffer []byte, offset int64) (bytesRead int, err error) {
 	if len(outputBuffer) == 0 {
 		return 0, nil
@@ -63,6 +63,10 @@ func (b *MemoryBuffer) ReadAt(outputBuffer []byte, offset int64) (bytesRead int,
 
 	b.mutex.RLock()
 	defer b.mutex.RUnlock()
+
+	if offset > int64(len(b.content)) {
+		return 0, fmt.Errorf("offset '%d' is greater than buffer size '%d'", offset, len(b.content))
+	}
 
 	return copy(outputBuffer, b.content[offset:]), nil
 }
