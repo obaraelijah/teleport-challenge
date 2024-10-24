@@ -1,4 +1,4 @@
-package cgroup_test
+package cgroupv1_test
 
 import (
 	"fmt"
@@ -6,7 +6,7 @@ import (
 
 	"github.com/obaraelijah/teleport-challenge/pkg/adaptation/os"
 	"github.com/obaraelijah/teleport-challenge/pkg/adaptation/os/ostest"
-	"github.com/obaraelijah/teleport-challenge/pkg/cgroup/v1"
+	"github.com/obaraelijah/teleport-challenge/pkg/cgroup/cgroupv1"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -16,11 +16,14 @@ func Test_cpu_Apply(t *testing.T) {
 	adapter := &os.Adapter{
 		WriteFileFn: writeRecorder.WriteFile,
 	}
-	cpu := cgroup.NewCpuControllerDetailed(adapter).SetCpus(2.0)
+
+	cpu := cgroupv1.NewCpuControllerDetailed(adapter).SetCpus(2.0)
 	cpu.Apply(path)
+
 	assert.Equal(t, 2, len(writeRecorder.Events))
-	assert.Equal(t, fmt.Sprintf("%s/%s", path, cgroup.CpuPeriodFilename), writeRecorder.Events[0].Name)
+	assert.Equal(t, fmt.Sprintf("%s/%s", path, cgroupv1.CpuPeriodFilename), writeRecorder.Events[0].Name)
 	assert.Equal(t, []byte("100000"), writeRecorder.Events[0].Data)
-	assert.Equal(t, fmt.Sprintf("%s/%s", path, cgroup.CpuQuotaFilename), writeRecorder.Events[1].Name)
+
+	assert.Equal(t, fmt.Sprintf("%s/%s", path, cgroupv1.CpuQuotaFilename), writeRecorder.Events[1].Name)
 	assert.Equal(t, []byte("200000"), writeRecorder.Events[1].Data)
 }

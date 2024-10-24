@@ -1,4 +1,4 @@
-package cgroup
+package cgroupv1
 
 // Controller defines the interface to a cgroup controller -- objects that
 // model concrete cgroup controlers and their configuration options.

@@ -25,7 +25,6 @@ test functionality that isn't suitable for unit test (e.g., programs that
 actually create and manage jobs, create and manage processes)
 
 ## Notes on running the tests
-
 Currently the build depends on a go compiler in the user's path.  I plan to
 eventually move the build process into a docker container.
 

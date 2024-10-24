@@ -1,4 +1,4 @@
-package cgroup
+package cgroupv1
 
 import "github.com/obaraelijah/teleport-challenge/pkg/adaptation/os"
 

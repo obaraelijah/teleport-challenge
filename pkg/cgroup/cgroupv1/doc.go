@@ -1,4 +1,4 @@
-// Package cgroup provides an simple abstraction over the cgroup v1 interface.
+// Package cgroupv1 provides an simple abstraction over the cgroup v1 interface.
 // The rationale to implement was driven by the fact that on my system, both
 // the v1 and v2 interfaces are mounted and the v1 interface is in use.
 //
@@ -6,4 +6,4 @@
 // implementation.  We could also add some code to the parent package to
 // enable us to examine the system and automatically pick the most suitable
 // implementation.
-package cgroup
+package cgroupv1
