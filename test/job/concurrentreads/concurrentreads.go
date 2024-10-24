@@ -1,7 +1,8 @@
 package main
 
 import (
-	"fmt"
+	"bufio"
+	"bytes"
 	"sync"
 
 	"github.com/obaraelijah/teleport-challenge/pkg/jobmanager"
@@ -19,24 +20,30 @@ func runTest() {
 		panic(err)
 	}
 
-	var wg sync.WaitGroup
-	wg.Add(100)
+	const numGoroutines = 100
+	var buckets [numGoroutines][]byte
 
-	for i := 0; i < 100; i++ {
-		go func(threadNum int) {
-			count := 0
+	var wg sync.WaitGroup
+	wg.Add(numGoroutines)
+
+	for i := 0; i < numGoroutines; i++ {
+		go func(goroutineNum int) {
 			for output := range job.StdoutStream().Stream() {
-				count += len(output)
-				if threadNum == 0 {
-					fmt.Print(string(output))
-				}
+				buckets[goroutineNum] = append(buckets[goroutineNum], output...)
 			}
-			fmt.Printf("%d: %d\n", threadNum, count)
 			wg.Done()
 		}(i)
 	}
 
 	wg.Wait()
+
+	var readers [numGoroutines]*bufio.Reader
+	for i := 0; i < numGoroutines-1; i++ {
+		readers[i] = bufio.NewReader(bytes.NewReader(buckets[i]))
+	}
+
+	for i := 0; i < numGoroutines-1; i++ {
+	}
 }
 
 // The job generates 10000 random numbers and prints them to standard output
