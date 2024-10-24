@@ -27,6 +27,7 @@ func Test_JobManager_DuplicateJobName_Error(t *testing.T) {
 	const programPath = "/bin/true"
 
 	jm := jobmanager.NewManagerDetailed(jobmanagertest.NewMockJob, nil)
+
 	_, _ = jm.Start(userName1, jobName, programPath, nil)
 	job, err := jm.Start(userName1, jobName, programPath, nil)
 
@@ -42,7 +43,7 @@ func Test_JobManager_Status_MatchingUser(t *testing.T) {
 	jm := jobmanager.NewManagerDetailed(jobmanagertest.NewMockJob, nil)
 
 	job, _ := jm.Start(userName1, jobName, programPath, nil)
-	status, err := jm.Status(userName1, job.Id().String())
+	status, err := jm.Status(userName1, job.ID().String())
 
 	assert.Nil(t, err)
 	assert.Equal(t, true, status.Running)
@@ -58,7 +59,7 @@ func Test_JobManager_Status_NonMatchingUser(t *testing.T) {
 	jm := jobmanager.NewManagerDetailed(jobmanagertest.NewMockJob, nil)
 
 	job, _ := jm.Start(userName1, jobName, programPath, nil)
-	_, err := jm.Status("someOtherUser", job.Id().String())
+	_, err := jm.Status("someOtherUser", job.ID().String())
 
 	assert.Error(t, err)
 }
@@ -71,7 +72,7 @@ func Test_JobManager_Status_Superuser(t *testing.T) {
 	jm := jobmanager.NewManagerDetailed(jobmanagertest.NewMockJob, nil)
 
 	job, _ := jm.Start(userName1, jobName, programPath, nil)
-	status, err := jm.Status(jobmanager.Superuser, job.Id().String())
+	status, err := jm.Status(jobmanager.Superuser, job.ID().String())
 
 	assert.Nil(t, err)
 	assert.Equal(t, true, status.Running)
@@ -87,8 +88,8 @@ func Test_JobManager_Stop_MatchingUser(t *testing.T) {
 	jm := jobmanager.NewManagerDetailed(jobmanagertest.NewMockJob, nil)
 
 	job, _ := jm.Start(userName1, jobName, programPath, nil)
-	_ = jm.Stop(userName1, job.Id().String())
-	status, err := jm.Status(userName1, job.Id().String())
+	_ = jm.Stop(userName1, job.ID().String())
+	status, err := jm.Status(userName1, job.ID().String())
 
 	assert.Nil(t, err)
 	assert.Equal(t, false, status.Running)
@@ -103,7 +104,7 @@ func Test_JobManager_Stop_NonmatchingUser(t *testing.T) {
 	jm := jobmanager.NewManagerDetailed(jobmanagertest.NewMockJob, nil)
 
 	job, _ := jm.Start(userName1, jobName, programPath, nil)
-	err := jm.Stop("someOtherUser", job.Id().String())
+	err := jm.Stop("someOtherUser", job.ID().String())
 
 	assert.Error(t, err)
 }
@@ -115,9 +116,9 @@ func Test_JobManager_Stop_Superuser(t *testing.T) {
 	jm := jobmanager.NewManagerDetailed(jobmanagertest.NewMockJob, nil)
 
 	job, _ := jm.Start(userName1, jobName, programPath, nil)
-	_ = jm.Stop(jobmanager.Superuser, job.Id().String())
+	_ = jm.Stop(jobmanager.Superuser, job.ID().String())
 
-	status, err := jm.Status(userName1, job.Id().String())
+	status, err := jm.Status(userName1, job.ID().String())
 
 	assert.Nil(t, err)
 	assert.Equal(t, false, status.Running)
@@ -195,7 +196,7 @@ func Test_JobManager_StdoutStream_MatchingUser(t *testing.T) {
 	job, _ := jm.Start(userName1, jobName, programPath, nil)
 	_ = job.Stop()
 
-	stream, err := jm.StdoutStream(userName1, job.Id().String())
+	stream, err := jm.StdoutStream(userName1, job.ID().String())
 
 	assert.Nil(t, err)
 	assert.Equal(t, "this is standard output", string(<-stream.Stream()))
@@ -211,7 +212,7 @@ func Test_JobManager_StdoutStream_NonmatchingUser(t *testing.T) {
 	job, _ := jm.Start(userName1, jobName, programPath, nil)
 	_ = job.Stop()
 
-	_, err := jm.StdoutStream("someOtherUser", job.Id().String())
+	_, err := jm.StdoutStream("someOtherUser", job.ID().String())
 
 	assert.Error(t, err)
 }
@@ -226,7 +227,7 @@ func Test_JobManager_StdoutStream_Superuser(t *testing.T) {
 	job, _ := jm.Start(userName1, jobName, programPath, nil)
 	_ = job.Stop()
 
-	stream, err := jm.StdoutStream(jobmanager.Superuser, job.Id().String())
+	stream, err := jm.StdoutStream(jobmanager.Superuser, job.ID().String())
 
 	assert.Nil(t, err)
 	assert.Equal(t, "this is standard output", string(<-stream.Stream()))
@@ -242,7 +243,7 @@ func Test_JobManager_StderrStream_MatchingUser(t *testing.T) {
 	job, _ := jm.Start(userName1, jobName, programPath, nil)
 	_ = job.Stop()
 
-	stream, err := jm.StderrStream(userName1, job.Id().String())
+	stream, err := jm.StderrStream(userName1, job.ID().String())
 
 	assert.Nil(t, err)
 	assert.Equal(t, "this is standard error", string(<-stream.Stream()))
@@ -258,7 +259,7 @@ func Test_JobManager_StderrStream_NonmatchingUser(t *testing.T) {
 	job, _ := jm.Start(userName1, jobName, programPath, nil)
 	_ = job.Stop()
 
-	_, err := jm.StderrStream("someOtherUser", job.Id().String())
+	_, err := jm.StderrStream("someOtherUser", job.ID().String())
 
 	assert.Error(t, err)
 }
@@ -273,7 +274,7 @@ func Test_JobManager_StderrStream_Superuser(t *testing.T) {
 	job, _ := jm.Start(userName1, jobName, programPath, nil)
 	_ = job.Stop()
 
-	stream, err := jm.StderrStream(jobmanager.Superuser, job.Id().String())
+	stream, err := jm.StderrStream(jobmanager.Superuser, job.ID().String())
 
 	assert.Nil(t, err)
 	assert.Equal(t, "this is standard error", string(<-stream.Stream()))
