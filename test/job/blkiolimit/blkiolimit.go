@@ -3,11 +3,11 @@ package main
 import (
 	"fmt"
 
-	"github.com/obaraelijah/teleport-challenge/pkg/cgroup/v1"
+	"github.com/obaraelijah/teleport-challenge/pkg/cgroup/cgroupv1"
 	"github.com/obaraelijah/teleport-challenge/pkg/jobmanager"
 )
 
-func runTest(controllers ...cgroup.Controller) {
+func runTest(controllers ...cgroupv1.Controller) {
 	job := jobmanager.NewJob("theOwner", "my-test", controllers,
 		"/bin/dd",
 		"if=/dev/zero",
@@ -48,7 +48,7 @@ func main() {
 	deviceString := fmt.Sprintf("8:16 %d", 1024*1024*20)
 	fmt.Printf("Running Blkio test with cgroup constraints with %s\n", deviceString)
 
-	runTest(cgroup.NewBlockIoController().
+	runTest(cgroupv1.NewBlockIoController().
 		SetReadBpsDevice(deviceString).
 		SetWriteBpsDevice(deviceString))
 }

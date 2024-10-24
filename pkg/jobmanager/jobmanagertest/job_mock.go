@@ -4,7 +4,7 @@ import (
 	"fmt"
 
 	"github.com/google/uuid"
-	"github.com/obaraelijah/teleport-challenge/pkg/cgroup/v1"
+	"github.com/obaraelijah/teleport-challenge/pkg/cgroup/cgroupv1"
 	"github.com/obaraelijah/teleport-challenge/pkg/io"
 	"github.com/obaraelijah/teleport-challenge/pkg/jobmanager"
 )
@@ -23,7 +23,7 @@ type mockJob struct {
 func NewMockJob(
 	owner string,
 	jobName string,
-	controllers []cgroup.Controller,
+	controllers []cgroupv1.Controller,
 	programPath string,
 	arguments ...string,
 ) jobmanager.Job {

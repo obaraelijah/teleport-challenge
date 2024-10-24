@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"sync"
 
-	"github.com/obaraelijah/teleport-challenge/pkg/cgroup/v1"
+	"github.com/obaraelijah/teleport-challenge/pkg/cgroup/cgroupv1"
 	"github.com/obaraelijah/teleport-challenge/pkg/config"
 	"github.com/obaraelijah/teleport-challenge/pkg/io"
 )
@@ -21,7 +21,7 @@ const (
 type JobConstructor func(
 	owner string,
 	jobName string,
-	controllers []cgroup.Controller,
+	controllers []cgroupv1.Controller,
 	programPath string,
 	arguments ...string,
 ) Job
@@ -32,16 +32,16 @@ type Manager struct {
 	jobsByUserByJobId   map[string]map[string]Job // userId->jobId->job
 	jobsByUserByJobName map[string]map[string]Job // userId->jobName->job
 	allJobsByJobId      map[string]Job            // jobId->job
-	controllers         []cgroup.Controller
+	controllers         []cgroupv1.Controller
 	jobConstructor      JobConstructor
 }
 
 // NewManager creates and returns a new standard Manager.
 func NewManager() *Manager {
-	controllers := []cgroup.Controller{
-		cgroup.NewCpuController().SetCpus(config.CgroupDefaultCpuLimit),
-		cgroup.NewMemoryController().SetLimit(config.CgroupDefaultMemoryLimit),
-		cgroup.NewBlockIoController().
+	controllers := []cgroupv1.Controller{
+		cgroupv1.NewCpuController().SetCpus(config.CgroupDefaultCpuLimit),
+		cgroupv1.NewMemoryController().SetLimit(config.CgroupDefaultMemoryLimit),
+		cgroupv1.NewBlockIoController().
 			SetReadBpsDevice(config.CgroupDefaultBlkioReadLimit).
 			SetWriteBpsDevice(config.CgroupDefaultBlkioWriteLimit),
 	}
@@ -56,7 +56,7 @@ func NewManager() *Manager {
 // constructor function for a mock type.
 // The given controllers is the list of cgroup controllers to manage while
 // running jobs.
-func NewManagerDetailed(jobConstructor JobConstructor, controllers []cgroup.Controller) *Manager {
+func NewManagerDetailed(jobConstructor JobConstructor, controllers []cgroupv1.Controller) *Manager {
 	return &Manager{
 		jobsByUserByJobId:   make(map[string]map[string]Job),
 		jobsByUserByJobName: make(map[string]map[string]Job),

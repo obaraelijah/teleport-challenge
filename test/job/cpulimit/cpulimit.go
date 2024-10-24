@@ -4,11 +4,11 @@ import (
 	"fmt"
 	"runtime"
 
-	"github.com/obaraelijah/teleport-challenge/pkg/cgroup/v1"
+	"github.com/obaraelijah/teleport-challenge/pkg/cgroup/cgroupv1"
 	"github.com/obaraelijah/teleport-challenge/pkg/jobmanager"
 )
 
-func runTest(controllers ...cgroup.Controller) {
+func runTest(controllers ...cgroupv1.Controller) {
 	job := jobmanager.NewJob("theOwner", "my-test", controllers,
 		"/usr/bin/stress-ng",
 		"--cpu",
@@ -56,5 +56,5 @@ func main() {
 	runTest()
 
 	fmt.Println("Running CPU test with cgroup constraints at 0.5 CPU")
-	runTest(cgroup.NewCpuController().SetCpus(0.5))
+	runTest(cgroupv1.NewCpuController().SetCpus(0.5))
 }
