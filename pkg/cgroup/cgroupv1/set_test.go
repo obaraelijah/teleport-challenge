@@ -13,7 +13,7 @@ import (
 )
 
 func Test_Set_Create_Success(t *testing.T) {
-	jobID, _ := uuid.Parse("0b5183b8-b572-49c7-90c4-fffc775b7d7b")
+	jobID := uuid.MustParse("0b5183b8-b572-49c7-90c4-fffc775b7d7b")
 	mkdirAllRecorder := ostest.MkdirAllMock{}
 	removeRecorder := ostest.RemoveMock{}
 
@@ -40,7 +40,7 @@ func Test_Set_Create_Success(t *testing.T) {
 }
 
 func Test_Set_Create_Failure(t *testing.T) {
-	jobID, _ := uuid.Parse("0b5183b8-b572-49c7-90c4-fffc775b7d7b")
+	jobID := uuid.MustParse("0b5183b8-b572-49c7-90c4-fffc775b7d7b")
 	mkdirAllRecorder := ostest.MkdirAllMock{}
 	removeRecorder := ostest.RemoveMock{}
 
@@ -70,7 +70,7 @@ func Test_Set_Create_Failure(t *testing.T) {
 }
 
 func Test_Set_Destroy_Success(t *testing.T) {
-	jobID, _ := uuid.Parse("0b5183b8-b572-49c7-90c4-fffc775b7d7b")
+	jobID := uuid.MustParse("0b5183b8-b572-49c7-90c4-fffc775b7d7b")
 	removeRecorder := ostest.RemoveMock{}
 
 	adapter := &os.Adapter{
@@ -94,7 +94,7 @@ func Test_Set_Destroy_Success(t *testing.T) {
 }
 
 func Test_Set_Destroy_Failure(t *testing.T) {
-	jobID, _ := uuid.Parse("0b5183b8-b572-49c7-90c4-fffc775b7d7b")
+	jobID := uuid.MustParse("0b5183b8-b572-49c7-90c4-fffc775b7d7b")
 	injectedError := fmt.Errorf("injected error")
 	removeRecorder := ostest.RemoveMock{
 		NextError: injectedError,
@@ -114,7 +114,7 @@ func Test_Set_Destroy_Failure(t *testing.T) {
 }
 
 func Test_Set_TaskFiles(t *testing.T) {
-	jobID, _ := uuid.Parse("0b5183b8-b572-49c7-90c4-fffc775b7d7b")
+	jobID := uuid.MustParse("0b5183b8-b572-49c7-90c4-fffc775b7d7b")
 
 	controller := &cgroupv1test.ControllerMock{ControllerName: "nil"}
 	set := cgroupv1.NewSet(jobID, controller)
