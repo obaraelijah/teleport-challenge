@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"sync"
 
+	"github.com/google/uuid"
 	"github.com/obaraelijah/teleport-challenge/pkg/cgroup/cgroupv1"
 	"github.com/obaraelijah/teleport-challenge/pkg/config"
 	"github.com/obaraelijah/teleport-challenge/pkg/io"
@@ -13,6 +14,19 @@ const (
 	// Superuser is the name of the user who can access any job.
 	Superuser = "administrator"
 )
+
+// Job defines an interface for objects that behave like jobs.  This enables
+// us to define both a production job type as well a a job type for unit
+// testing.
+type Job interface {
+	Start() error
+	Stop() error
+	Status() *JobStatus
+	StdoutStream() *io.ByteStream
+	StderrStream() *io.ByteStream
+	Name() string
+	Id() uuid.UUID
+}
 
 // JobConstructor is a type that models a function for creating Jobs.
 // This enables us to have a "real" job constructor function as well as
